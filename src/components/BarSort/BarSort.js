@@ -84,6 +84,99 @@ class BarSort extends React.Component {
         }
         return barStates;
     }
+
+    getHeapAnimations(array) {
+        const animations = [];
+        if (array.length <= 1) return array;
+        this.heapSort(array, animations);
+        return animations;
+    }
+    
+    heapSort(array, animations) {
+        var length = array.length;
+        var currentBars = JSON.parse(JSON.stringify(this.state.bars));
+        
+        //build heap
+        for (var i = Math.floor(length / 2); i >= 0; i -= 1)      {
+            this.heapify(array, length, i, animations, currentBars);
+        }
+        
+        //swap root with last index. Decrement array length. Then heapify starting from root. 
+        for (i = length - 1; i > 0; i--) {
+            //change colours of bars being swapped
+            currentBars[0].action = 1;
+            currentBars[i].action = 1;
+            animations.push(JSON.parse(JSON.stringify(currentBars)));
+
+            this.swap(currentBars, 0, i);
+            animations.push(JSON.parse(JSON.stringify(currentBars)));
+
+            //colour sorted bar blue and other bar yellow
+            currentBars[0].action = 0;
+            currentBars[i].action = 2;
+            animations.push(JSON.parse(JSON.stringify(currentBars)));
+            
+            this.swap(array, 0, i);      
+            this.heapify(array, i, 0, animations, currentBars);
+        }
+
+        currentBars[0].action = 2;
+        animations.push(JSON.parse(JSON.stringify(currentBars)));
+
+    } 
+    
+    heapify(array, size, idx, animations, currentBars) {
+        var left = 2 * idx + 1;
+        var right = 2 * idx + 2;
+        var max = idx;
+    
+        if (left < size && array[left].value > array[max].value) {
+            currentBars[left].action = 1;
+            currentBars[max].action = 1;
+            animations.push(JSON.parse(JSON.stringify(currentBars)));
+            
+            currentBars[left].action = 0;
+            currentBars[max].action = 0;
+            animations.push(JSON.parse(JSON.stringify(currentBars)));
+            
+            max = left;
+        }
+    
+        if (right < size && array[right].value > array[max].value) {
+            currentBars[right].action = 1;
+            currentBars[max].action = 1;
+            animations.push(JSON.parse(JSON.stringify(currentBars)));
+            
+            currentBars[right].action = 0;
+            currentBars[max].action = 0;
+            animations.push(JSON.parse(JSON.stringify(currentBars)));
+
+            max = right;
+        }
+    
+        if (max !== idx) {
+            currentBars[idx].action = 1;
+            currentBars[max].action = 1;
+            animations.push(JSON.parse(JSON.stringify(currentBars)));
+
+            this.swap(currentBars, idx, max);
+            animations.push(JSON.parse(JSON.stringify(currentBars)));
+
+            currentBars[idx].action = 0;
+            currentBars[max].action = 0;
+            animations.push(JSON.parse(JSON.stringify(currentBars)));
+
+            this.swap(array, idx, max);
+            this.heapify(array, size, max, animations, currentBars);
+        }
+    }
+    
+    swap(array, idx1, idx2) {
+        var temp = array[idx1];
+        array[idx1] = array[idx2];
+        array[idx2] = temp;
+    }
+
     visualizeSort() {
         var that = this;
         var barStates;
@@ -98,10 +191,11 @@ class BarSort extends React.Component {
             return;
         }
         else if (this.currentAlgo === 'heap') {
-            barStates = this.bubbleSort();
+            barStates = this.getHeapAnimations(JSON.parse(JSON.stringify(this.state.bars)));
         }
         else { //binary
-            barStates = this.bubbleSort();
+            //Just put this here to test out heapsort
+            barStates = this.getHeapAnimations(JSON.parse(JSON.stringify(this.state.bars)));
         }
 
         var speed = this.state.speed.current.value;
@@ -156,12 +250,6 @@ class BarSort extends React.Component {
                 //recursive call
             }
         }
-        swap(array, leftIndex, rightIndex){
-            var temp = array[leftIndex];
-            array[leftIndex] = array[rightIndex];
-            array[rightIndex] = temp;
-        }
-
 
         partition(array, left, right) {
             var pivot = array[Math.floor((right + left) / 2)].value, //middle element
@@ -201,9 +289,10 @@ class BarSort extends React.Component {
             }
         }
 
-    setAlgo(type) {
+    setAlgo(type) { // this function isn't working properly for some reason.
+        // currentAlgo becomes undefined whenever a different algo is chosen.
         this.setState({
-            currentAlgo: type,
+            currentAlgo: type
         });
     }
 
