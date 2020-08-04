@@ -7,7 +7,6 @@ import Button from 'react-bootstrap/Button';
 
 class BarSort extends React.Component {
 
-
     constructor(props) {
         super(props);
         this.state = {
@@ -20,9 +19,10 @@ class BarSort extends React.Component {
             currentAlgo: 'quick',
             stateArray: []
         }
+       
+        //this.visualizeSort = this.visualizeSort.bind(this);
 
     }
-
 
     generateBars() {
         const barCount = this.state.inputQty.current.value;
@@ -50,7 +50,6 @@ class BarSort extends React.Component {
         });
 
     }
-
 
     clear() {
         this.setState({
@@ -104,24 +103,22 @@ class BarSort extends React.Component {
         //swap root with last index. Decrement array length. Then heapify starting from root. 
         for (i = length - 1; i > 0; i--) {
             //change colours of bars being swapped
-            currentBars[0].action = 1;
-            currentBars[i].action = 1;
-            animations.push(JSON.parse(JSON.stringify(currentBars)));
+            this.changeBarColours(currentBars, 0, i, 1, 1);
+            this.pushAnimation(animations, currentBars);
 
             this.swap(currentBars, 0, i);
-            animations.push(JSON.parse(JSON.stringify(currentBars)));
+            this.pushAnimation(animations, currentBars);
 
             //colour sorted bar blue and other bar yellow
-            currentBars[0].action = 0;
-            currentBars[i].action = 2;
-            animations.push(JSON.parse(JSON.stringify(currentBars)));
+            this.changeBarColours(currentBars, 0, i, 0, 2);
+            this.pushAnimation(animations, currentBars);
             
             this.swap(array, 0, i);      
             this.heapify(array, i, 0, animations, currentBars);
         }
 
         currentBars[0].action = 2;
-        animations.push(JSON.parse(JSON.stringify(currentBars)));
+        this.pushAnimation(animations, currentBars);
 
     } 
     
@@ -131,44 +128,47 @@ class BarSort extends React.Component {
         var max = idx;
     
         if (left < size && array[left].value > array[max].value) {
-            currentBars[left].action = 1;
-            currentBars[max].action = 1;
-            animations.push(JSON.parse(JSON.stringify(currentBars)));
+            this.changeBarColours(currentBars, left, max, 1, 1);
+            this.pushAnimation(animations, currentBars);
             
-            currentBars[left].action = 0;
-            currentBars[max].action = 0;
-            animations.push(JSON.parse(JSON.stringify(currentBars)));
+            this.changeBarColours(currentBars, left, max, 0, 0);
+            this.pushAnimation(animations, currentBars);
             
             max = left;
         }
     
         if (right < size && array[right].value > array[max].value) {
-            currentBars[right].action = 1;
-            currentBars[max].action = 1;
-            animations.push(JSON.parse(JSON.stringify(currentBars)));
+            this.changeBarColours(currentBars, right, max, 1, 1);
+            this.pushAnimation(animations, currentBars);
             
-            currentBars[right].action = 0;
-            currentBars[max].action = 0;
-            animations.push(JSON.parse(JSON.stringify(currentBars)));
+            this.changeBarColours(currentBars, right, max, 0, 0);
+            this.pushAnimation(animations, currentBars);
 
             max = right;
         }
     
         if (max !== idx) {
-            currentBars[idx].action = 1;
-            currentBars[max].action = 1;
-            animations.push(JSON.parse(JSON.stringify(currentBars)));
+            this.changeBarColours(currentBars, idx, max, 1, 1);
+            this.pushAnimation(animations, currentBars);
 
             this.swap(currentBars, idx, max);
-            animations.push(JSON.parse(JSON.stringify(currentBars)));
+            this.pushAnimation(animations, currentBars);
 
-            currentBars[idx].action = 0;
-            currentBars[max].action = 0;
-            animations.push(JSON.parse(JSON.stringify(currentBars)));
+            this.changeBarColours(currentBars, idx, max, 0, 0);
+            this.pushAnimation(animations, currentBars);
 
             this.swap(array, idx, max);
             this.heapify(array, size, max, animations, currentBars);
         }
+    }
+
+    changeBarColours(array, barOneIdx, barTwoIdx, barOneColour, BarTwoColour) {
+        array[barOneIdx].action = barOneColour;
+        array[barTwoIdx].action = BarTwoColour;
+    }
+
+    pushAnimation(animations, bars) {
+        animations.push(JSON.parse(JSON.stringify(bars)));
     }
     
     swap(array, idx1, idx2) {
@@ -177,9 +177,10 @@ class BarSort extends React.Component {
         array[idx2] = temp;
     }
 
-    visualizeSort() {
+    visualizeSort(e) {
         var that = this;
         var barStates;
+        //var algo = this.currentAlgo;
         if (this.currentAlgo === 'bubble') {
             barStates = this.bubbleSort();
         }
@@ -211,7 +212,6 @@ class BarSort extends React.Component {
         }
         
     }
-
 
     merge_sort_aux(arr1, arr2) {
         var arr_final = [];
@@ -289,13 +289,11 @@ class BarSort extends React.Component {
             }
         }
 
-    setAlgo(type) { // this function isn't working properly for some reason.
-        // currentAlgo becomes undefined whenever a different algo is chosen.
+    setAlgo(type) {
         this.setState({
             currentAlgo: type
         });
     }
-
 
     quickSort(array, left, right) {
             var index;
@@ -319,11 +317,12 @@ class BarSort extends React.Component {
                 }
             }
             return array;
-        }
+    }
 
     render(){
             var width = 92.0/this.state.count;
             var margin = 4.0/this.state.count;
+            var that = this;
             
             const barList = this.state.bars.map((bar) =>
                         <Bar key={bar.value} value={bar.value} barWidth={width} barMargin={margin} action={bar.action}/>             
@@ -334,7 +333,7 @@ class BarSort extends React.Component {
                 <center>
                     <Button className= "algoButton" variant="dark" onClick={(e) => this.setAlgo('quick')}>Q U I C K</Button>
                     <Button className= "algoButton" variant="dark" onClick={(e) => this.setAlgo('merge')} >M E R G E</Button>                    
-                    <Button className= "algoButton" variant="dark" onClick={(e) => this.setAlgo('heap')}>H E A P</Button>
+                    <Button className= "algoButton" variant="dark" onClick={(e) => this.setAlgo.bind('heap')} >H E A P</Button>
                     <Button className= "algoButton" variant="dark" onClick={(e) => this.setAlgo('bubble')} >B U B B L E</Button>                    
                     <Button className= "algoButton" variant="dark" onClick={(e) => this.setAlgo('binary')}>B I N A R Y</Button>
                 </center>
@@ -359,7 +358,7 @@ class BarSort extends React.Component {
                                             <p className="rangeText">Slow</p>  
                                             <Form.Control ref={this.state.speed} className="speedControl" type="range" min="20" max="2000" step="10"/>                            
                                             <p className="rangeText">Fast</p>
-                                            <Button className="rangeText" onClick={this.visualizeSort.bind(this)}>Sort</Button>
+                                            <Button className="rangeText" onClick={(e) => this.visualizeSort(e)}>Sort</Button>
                                             {/* <Button className="rangeText" onClick={this.visualizeQuickSort.bind(this)}>Quick Sort</Button> */}
                                             
                                             </center>
